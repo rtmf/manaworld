@@ -177,6 +177,7 @@ void printSimpleRender(particleField * pf)
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
 	x=-pf->maxx;
 	y=pf->maxy;
+	printf("Simple Render:\n");
 	while(y>=-pf->maxy)
 	{
 		t=tripleAtPos(pf,x,y);
@@ -190,26 +191,25 @@ void printSimpleRender(particleField * pf)
 		}
 	}
 }
-void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int y, signed int dir)
+void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int y, signed int mag)
 {
 	double xf,yf;
 	double dist;
-	//direction: 1 for attract, -1 for repel, 0 to just ignore this
 	xf=x-pf->current[p].x;
 	yf=y-pf->current[p].y;
 	dist=sqrt(xf*xf+yf*yf);
 	xf=xf/dist;
 	yf=yf/dist;
-	v->x+=xf*dir;
-	v->y+=yf*dir;
+	v->x+=xf*mag;
+	v->y+=yf*mag;
 }
 void addPoleForce(particleField * pf, int p, vect * v)
 {
 	particleDefinition pd=particleDef[pf->current[p].class];
-	addForceFrom(pf,p,v,0,pf->maxy,pd.poles[0]);
-	addForceFrom(pf,p,v,pf->maxx,0,pd.poles[1]);
-	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]);
-	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]);
+	addForceFrom(pf,p,v,0,pf->maxy,pd.poles[0]*pf->maxy);
+	addForceFrom(pf,p,v,pf->maxx,0,pd.poles[1]*pf->maxx);
+	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]*pf->maxy);
+	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]*pf->maxx);
 }
 void mutateParticle(particleField * pf, int p)
 {
@@ -247,7 +247,7 @@ int main(int argc, char ** argv)
 	{
 		printParticle(particleDef[i]);
 	}
-	if (initField(&pf,4,4,1000)==0)
+	if (initField(&pf,4,4,100)==0)
 	{
 		while(1)
 		{
