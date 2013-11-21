@@ -6,6 +6,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 /*
    Basic Commands:
 
@@ -34,9 +35,12 @@ typedef struct particleDefinition
 	/*
 	   repels and attracts have the same order as the particleDef
 	    array and define which classes they repel and attract.
+	   poles refers to which of the poles it attracts
+	    array goes cw from top, FAWE
 	 */
 	unsigned int attracts[6];
 	unsigned int repels[6];
+	unsigned int poles[4];
 	/*
 	   r, g and b define the color of the particle for rendering
 	 */
@@ -46,26 +50,32 @@ particleDefinition particleDef[6]={
 	{"AF","Lightning","Change",
 		{1,1,1,0,1,1},
 		{0,0,0,1,0,0},
+		{1,1,0,0},
 		1,0,0},
 	{"AE","Light","Extropy",
 		{1,1,1,1,0,1},
 		{0,0,0,0,1,0},
+		{0,1,0,1},
 		0,1,0},
 	{"AW","Mist","Dynamism",
 		{1,1,1,1,1,0},
 		{0,0,0,0,0,1},
+		{0,1,1,0},
 		0,0,1},
 	{"WE","Ice","Stasis",
 		{0,1,1,1,1,1},
 		{1,0,0,0,0,0},
+		{0,0,1,1},
 		-1,0,0},
 	{"FW","Shadow","Entropy",
 		{1,0,1,1,1,1},
 		{0,1,0,0,0,0},
+		{1,0,1,0},
 		0,-1,0},
 	{"FE","Metal","Tradition",
 		{1,1,0,1,1,1},
 		{0,0,1,0,0,0},
+		{1,0,0,1},
 		0,0,-1},
 };
 typedef struct particle
@@ -77,6 +87,10 @@ typedef struct triple
 {
 	signed int r,g,b;
 } triple;
+typedef struct vect
+{
+	double x,y;
+} vect;
 typedef struct particleField
 {
 	particle * current; //current status of field
@@ -162,8 +176,8 @@ void printSimpleRender(particleField * pf)
 	triple * t;
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
 	x=-pf->maxx;
-	y=-pf->maxy;
-	while(y<=pf->maxy)
+	y=pf->maxy;
+	while(y>=-pf->maxy)
 	{
 		t=tripleAtPos(pf,x,y);
 		printf("[%+3d,%+3d,%+3d]",t->r,t->g,t->b);
@@ -172,9 +186,54 @@ void printSimpleRender(particleField * pf)
 		{
 			x=-pf->maxx;
 			printf("\n");
-			y++;
+			y--;
 		}
 	}
+}
+void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int y, signed int dir)
+{
+	double xf,yf;
+	double dist;
+	//direction: 1 for attract, -1 for repel, 0 to just ignore this
+	xf=x-pf->current[p].x;
+	yf=y-pf->current[p].y;
+	dist=sqrt(xf*xf+yf*yf);
+	xf=xf/dist;
+	yf=yf/dist;
+	v->x+=xf*dir;
+	v->y+=yf*dir;
+}
+void addPoleForce(particleField * pf, int p, vect * v)
+{
+	particleDefinition pd=particleDef[pf->current[p].class];
+	addForceFrom(pf,p,v,0,pf->maxy,pd.poles[0]);
+	addForceFrom(pf,p,v,pf->maxx,0,pd.poles[1]);
+	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]);
+	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]);
+}
+void mutateParticle(particleField * pf, int p)
+{
+	vect v;
+	v.x=0;
+	v.y=0;
+	pf->new[p]=pf->current[p];
+	addPoleForce(pf,p,&v);
+	//addParticleForce(pf,p,&v);
+	pf->new[p].x+=v.x;
+	while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
+	while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+	pf->new[p].y+=v.y;
+	while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
+	while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+}
+void mutateField(particleField * pf)
+{
+	int i;
+	if (pf==NULL || pf->current==NULL || pf->new==NULL) return;
+	for (i=0;i<pf->pcount;i++)
+		mutateParticle(pf,i);
+	for (i=0;i<pf->pcount;i++)
+		pf->current[i]=pf->new[i];
 }
 int main(int argc, char ** argv)
 {
@@ -190,8 +249,13 @@ int main(int argc, char ** argv)
 	}
 	if (initField(&pf,4,4,1000)==0)
 	{
-		renderFieldSimple(&pf);
-		printSimpleRender(&pf);
+		while(1)
+		{
+			renderFieldSimple(&pf);
+			printSimpleRender(&pf);
+			sleep(1);
+			mutateField(&pf);
+		}
 		return 0;
 	}
 	else return 1;
