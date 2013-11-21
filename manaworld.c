@@ -3,6 +3,7 @@
 //RtMF
 
 #include <stdio.h>
+#include <malloc.h>
 /*
    Basic Commands:
 
@@ -32,8 +33,8 @@ typedef struct particleDefinition
 	   repels and attracts have the same order as the particleDef
 	    array and define which classes they repel and attract.
 	 */
-	int attracts[6];
-	int repels[6];
+	unsigned int attracts[6];
+	unsigned int repels[6];
 	/*
 	   r, g and b define the color of the particle for rendering
 	 */
@@ -65,7 +66,34 @@ particleDefinition particleDef[6]={
 		{0,0,1,0,0,0},
 		0,0,-1},
 };
-
+typedef struct particle
+{
+	signed int x,y;
+	unsigned int class;
+} particle;
+typedef struct particleField
+{
+	particle * current; //current status of field
+	particle * new; //storage for new status of field
+	unsigned int maxx; //width is maxx*2+1
+	unsigned int maxy; //height is maxy*2+1
+	unsigned int pcount; //particle count
+} particleField;
+unsigned int freeField(particleField * pf)
+{
+	if (pf==NULL) return 1;
+	if (pf->current!=NULL) free(pf->current);
+	if (pf->new!=NULL) free(pf->new);
+	return 0;
+}
+unsigned int initField(particleField * pf, unsigned int maxx, unsigned int maxy, unsigned int pcount)
+{
+	if (freeField(pf)) return 1;
+	pf->current=malloc(pcount*sizeof(particle));
+	pf->new=malloc(pcount*sizeof(particle));
+	if (pf->current==NULL || pf->new==NULL) return freeField(pf);
+	return 0;
+};
 void printParticle(particleDefinition p)
 {
 	const char * pFormat="[%s] %s(%s) (%+1d,%+1d,%+1d)\n";
@@ -75,8 +103,12 @@ void printParticle(particleDefinition p)
 int main(int argc, char ** argv)
 {
 	int i;
+	particleField pf;
+	pf.current=NULL;
+	pf.new=NULL;
 	for (i=0;i<6;i++)
 	{
 		printParticle(particleDef[i]);
 	}
+	return initField(&pf,127,127,1000);
 }
