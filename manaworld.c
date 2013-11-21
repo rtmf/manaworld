@@ -32,8 +32,8 @@ typedef struct particleDefinition
 	   repels and attracts have the same order as the particleDef
 	    array and define which classes they repel and attract.
 	 */
-	int repels[6];
 	int attracts[6];
+	int repels[6];
 	/*
 	   r, g and b define the color of the particle for rendering
 	 */
