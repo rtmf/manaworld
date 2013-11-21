@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <malloc.h>
+#include <stdlib.h>
 /*
    Basic Commands:
 
@@ -86,12 +87,30 @@ unsigned int freeField(particleField * pf)
 	if (pf->new!=NULL) free(pf->new);
 	return 0;
 }
+void scatterParticles(particleField * pf)
+{
+	unsigned int i;
+	if (pf==NULL) return;
+	if (pf->current==NULL) return;
+	for (i=0;i<pf->pcount;i++)
+	{
+		pf->current[i].x=drand48()*pf->maxx;
+		pf->current[i].x*=drand48()>0.5?1:-1;
+		pf->current[i].y=drand48()*pf->maxx;
+		pf->current[i].y*=drand48()>0.5?1:-1;
+		pf->current[i].class=lrand48()%6;
+	}
+}
 unsigned int initField(particleField * pf, unsigned int maxx, unsigned int maxy, unsigned int pcount)
 {
 	if (freeField(pf)) return 1;
 	pf->current=malloc(pcount*sizeof(particle));
 	pf->new=malloc(pcount*sizeof(particle));
 	if (pf->current==NULL || pf->new==NULL) return freeField(pf);
+	pf->maxx=maxx;
+	pf->maxy=maxy;
+	pf->pcount=pcount;
+	scatterParticles(pf);
 	return 0;
 };
 void printParticle(particleDefinition p)
