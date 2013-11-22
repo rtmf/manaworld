@@ -272,19 +272,31 @@ void mutateParticle(particleField * pf, int p)
 	v.x=0;
 	v.y=0;
 	pf->new[p]=pf->current[p];
+	if (pf->new[p].y < -pf->maxy)
+		*((char*)0)=1;
 	addPoleForce(pf,p,&v);
 	addParticleForce(pf,p,&v);
 	//addForceFrom(pf,p,&v,0,0,8);
-	if (v.x!=0) v.x/=abs(v.x);
-	pf->new[p].x+=v.x;
-	pf->new[p].x=((pf->new[p].x+pf->maxx)%(pf->maxx*2+1))-pf->maxx;
+	if (abs(v.x)>.1)
+	{
+		v.x/=abs(v.x);
+		pf->new[p].x+=v.x;
+		if (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+		if (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
+	}
 	//if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
 	//if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
-	if (v.y!=0) v.y/=abs(v.y);
-	pf->new[p].y+=v.y;
-	pf->new[p].y=((pf->new[p].y+pf->maxy)%(pf->maxy*2+1))-pf->maxy;
+	if (abs(v.y)>.1) 
+	{
+		v.y/=abs(v.y);
+		pf->new[p].y+=v.y;
+		if (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+		if (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
+	}
 	//if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
 	//if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
+	if (pf->new[p].y < -pf->maxy)
+		*((char*)0)=0;
 }
 void mutateField(particleField * pf)
 {
