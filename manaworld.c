@@ -187,7 +187,7 @@ void printSimpleRender(particleField * pf)
 {
 	signed int x,y;
 	double r,g,b;
-	int tr,tg,tb;
+	unsigned int tr,tg,tb;
 	double m;
 	triple * t;
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
@@ -208,12 +208,12 @@ void printSimpleRender(particleField * pf)
 		r/=m;
 		g/=m;
 		b/=m;
-		r*=6;
-		g*=6;
-		b*=6;
-		tr=r>5?5:r;
-		tg=g>5?5:g;
-		tb=b>5?5:b;
+		tr=r*6;
+		tg=g*6;
+		tb=b*6;
+		tr=tr>5?5:tr;
+		tg=tg>5?5:tg;
+		tb=tb>5?5:tb;
 		printf("\e[48;5;%dm \e[48;5;0m",16+36*tr+6*tg+tb);
 		//printf("[%+3d,%+3d,%+3d]",t->r,t->g,t->b);
 		x++;
@@ -303,7 +303,7 @@ int main(int argc, char ** argv)
 	{
 		printParticleDef(particleDef[i]);
 	}
-	if (initField(&pf,10,10,10)==0)
+	if (initField(&pf,20,20,1000)==0)
 	{
 		while(1)
 		{
