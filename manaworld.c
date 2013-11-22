@@ -322,15 +322,25 @@ int main(int argc, char ** argv)
 	}
 	if (initField(&pf,40,20,10000)==0)
 	{
-		while(1)
+		if (argc>1)
 		{
-			renderFieldSimple(&pf);
-			printSimpleRender(&pf);
-			printf("FrameCount:%d",frames);
-			frames++;
-			//printParticles(&pf);
-	//		sleep(1);
-			mutateField(&pf);
+			for(i=atoi(argv[1]);i>0;i--)
+			{
+				mutateField(&pf);
+			}
+		}
+		else
+		{
+			while(1)
+			{
+				renderFieldSimple(&pf);
+				printSimpleRender(&pf);
+				printf("FrameCount:%d",frames);
+				frames++;
+				//printParticles(&pf);
+				//		sleep(1);
+				mutateField(&pf);
+			}
 		}
 		return 0;
 	}
