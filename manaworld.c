@@ -275,11 +275,13 @@ void mutateParticle(particleField * pf, int p)
 	addPoleForce(pf,p,&v);
 	addParticleForce(pf,p,&v);
 	//addForceFrom(pf,p,&v,0,0,8);
+	if (v.x!=0) v.x/=v.x;
 	pf->new[p].x+=v.x;
 	while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
 	while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
 	//if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
 	//if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
+	if (v.y!=0) v.y/=v.y;
 	pf->new[p].y+=v.y;
 	while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
 	while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
