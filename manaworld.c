@@ -211,6 +211,18 @@ void addPoleForce(particleField * pf, int p, vect * v)
 	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]*pf->maxy);
 	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]*pf->maxx);
 }
+#define SCALE 10
+void addParticleForce(particleField * pf, int p, vect * v)
+{
+	int i;
+	particle pt;
+	particleDefinition pd=particleDef[pf->current[p].class];
+	for (i=0;i<pf->pcount;i++)
+	{
+		pt=pf->current[i];
+		addForceFrom(pf,p,v,pt.x,pt.y,pd.attracts[pt.class]?SCALE:-SCALE*pd.repels[pt.class]);
+	}
+}
 void mutateParticle(particleField * pf, int p)
 {
 	vect v;
