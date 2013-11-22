@@ -48,32 +48,32 @@ typedef struct particleDefinition
 } particleDefinition;
 particleDefinition particleDef[6]={
 	{"AF","Lightning","Change",
-		{1,1,1,0,1,1},
+		{1,0,0,0,0,0},
 		{0,0,0,1,0,0},
 		{1,1,0,0},
 		1,0,0},
 	{"AE","Light","Extropy",
-		{1,1,1,1,0,1},
+		{0,1,0,0,0,0},
 		{0,0,0,0,1,0},
 		{0,1,0,1},
 		0,1,0},
 	{"AW","Mist","Dynamism",
-		{1,1,1,1,1,0},
+		{0,0,1,0,0,0},
 		{0,0,0,0,0,1},
 		{0,1,1,0},
 		0,0,1},
 	{"WE","Ice","Stasis",
-		{0,1,1,1,1,1},
+		{0,0,0,1,0,0},
 		{1,0,0,0,0,0},
 		{0,0,1,1},
 		-1,0,0},
 	{"FW","Shadow","Entropy",
-		{1,0,1,1,1,1},
+		{0,0,0,0,1,0},
 		{0,1,0,0,0,0},
 		{1,0,1,0},
 		0,-1,0},
 	{"FE","Metal","Tradition",
-		{1,1,0,1,1,1},
+		{0,0,0,0,0,1},
 		{0,0,1,0,0,0},
 		{1,0,0,1},
 		0,0,-1},
@@ -135,14 +135,27 @@ unsigned int initField(particleField * pf, unsigned int maxx, unsigned int maxy,
 	scatterParticles(pf);
 	return 0;
 }
-void printParticle(particleDefinition p)
+void printParticleDef(particleDefinition p)
 {
 	const char * pFormat="[%s] %s(%s) (%+1d,%+1d,%+1d)\n";
 	printf(pFormat,p.combo,p.element,p.force,p.r,p.g,p.b);
 }
+void printParticles(particleField * pf)
+{
+	const char * pFormat="(%+3d,%+3d) %1d:";
+	int i;
+	for (i=0;i<pf->pcount;i++)
+	{
+		printf(pFormat,pf->current[i].x,pf->current[i].y,pf->current[i].class);
+		printParticleDef(particleDef[pf->current[i].class]);
+	}
+}
 triple * tripleAtPos(particleField * pf, signed int x, signed int y)
 {
-	return &(pf->field[(x+pf->maxx)+(y+pf->maxy)*(pf->maxx*2+1)]);
+	int px=x+pf->maxx;
+	int py=y+pf->maxy;
+	int idx=px+py*(pf->maxx*2+1);
+	return &(pf->field[idx]);
 }
 void renderFieldSimple(particleField * pf)
 {
@@ -173,6 +186,9 @@ void renderFieldSimple(particleField * pf)
 void printSimpleRender(particleField * pf)
 {
 	signed int x,y;
+	double r,g,b;
+	int tr,tg,tb;
+	double m;
 	triple * t;
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
 	x=-pf->maxx;
@@ -181,7 +197,25 @@ void printSimpleRender(particleField * pf)
 	while(y>=-pf->maxy)
 	{
 		t=tripleAtPos(pf,x,y);
-		printf("[%+3d,%+3d,%+3d]",t->r,t->g,t->b);
+		r=t->r;
+		g=t->g;
+		b=t->b;
+		m=(r<g?(r<b?r:b):g);
+		r+=m;
+		g+=m;
+		b+=m;
+		m=(r>g?(r>b?r:b):g);
+		r/=m;
+		g/=m;
+		b/=m;
+		r*=6;
+		g*=6;
+		b*=6;
+		tr=r>5?5:r;
+		tg=g>5?5:g;
+		tb=b>5?5:b;
+		printf("\e[48;5;%dm \e[48;5;0m",16+36*tr+6*tg+tb);
+		//printf("[%+3d,%+3d,%+3d]",t->r,t->g,t->b);
 		x++;
 		if (x>pf->maxx)
 		{
@@ -198,6 +232,8 @@ void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int 
 	xf=x-pf->current[p].x;
 	yf=y-pf->current[p].y;
 	dist=sqrt(xf*xf+yf*yf);
+	if (dist<1) return;
+	if (abs(mag)>dist) mag=dist*(mag/abs(mag));
 	xf=xf/dist;
 	yf=yf/dist;
 	v->x+=xf*mag;
@@ -211,16 +247,19 @@ void addPoleForce(particleField * pf, int p, vect * v)
 	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]*pf->maxy);
 	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]*pf->maxx);
 }
-#define SCALE 0.1
+#define SCALE 2
 void addParticleForce(particleField * pf, int p, vect * v)
 {
 	int i;
 	particle pt;
+	double mag;
 	particleDefinition pd=particleDef[pf->current[p].class];
 	for (i=0;i<pf->pcount;i++)
 	{
 		pt=pf->current[i];
-		addForceFrom(pf,p,v,pt.x,pt.y,pd.attracts[pt.class]?SCALE:-SCALE*pd.repels[pt.class]);
+		if (pd.attracts[pt.class]) mag=SCALE;
+		if (pd.repels[pt.class]) mag=-SCALE;
+		addForceFrom(pf,p,v,pt.x,pt.y,mag);
 	}
 }
 void mutateParticle(particleField * pf, int p)
@@ -231,16 +270,17 @@ void mutateParticle(particleField * pf, int p)
 	pf->new[p]=pf->current[p];
 	addPoleForce(pf,p,&v);
 	addParticleForce(pf,p,&v);
+	//addForceFrom(pf,p,&v,0,0,8);
 	pf->new[p].x+=v.x;
-	//while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
-	//while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
-	if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
-	if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
+	while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
+	while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+	//if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
+	//if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
 	pf->new[p].y+=v.y;
-	//while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
-	//while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
-	if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
-	if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
+	while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
+	while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+	//if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
+	//if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
 }
 void mutateField(particleField * pf)
 {
@@ -261,15 +301,16 @@ int main(int argc, char ** argv)
 	pf.field=NULL;
 	for (i=0;i<6;i++)
 	{
-		printParticle(particleDef[i]);
+		printParticleDef(particleDef[i]);
 	}
-	if (initField(&pf,4,4,100)==0)
+	if (initField(&pf,10,10,10)==0)
 	{
 		while(1)
 		{
 			renderFieldSimple(&pf);
 			printSimpleRender(&pf);
-//			sleep(1);
+			//printParticles(&pf);
+	//		sleep(1);
 			mutateField(&pf);
 		}
 		return 0;
