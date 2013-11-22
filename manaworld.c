@@ -118,7 +118,7 @@ void scatterParticles(particleField * pf)
 	{
 		pf->current[i].x=drand48()*pf->maxx;
 		pf->current[i].x*=drand48()>0.5?1:-1;
-		pf->current[i].y=drand48()*pf->maxx;
+		pf->current[i].y=drand48()*pf->maxy;
 		pf->current[i].y*=drand48()>0.5?1:-1;
 		pf->current[i].class=lrand48()%6;
 	}
@@ -320,7 +320,7 @@ int main(int argc, char ** argv)
 	{
 		printParticleDef(particleDef[i]);
 	}
-	if (initField(&pf,20,20,1000)==0)
+	if (initField(&pf,40,20,10000)==0)
 	{
 		while(1)
 		{
