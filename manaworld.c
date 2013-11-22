@@ -277,14 +277,12 @@ void mutateParticle(particleField * pf, int p)
 	//addForceFrom(pf,p,&v,0,0,8);
 	if (v.x!=0) v.x/=abs(v.x);
 	pf->new[p].x+=v.x;
-	while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
-	while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+	pf->new[p].x=((pf->new[p].x+pf->maxx)%(pf->maxx*2+1))-pf->maxx;
 	//if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
 	//if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
 	if (v.y!=0) v.y/=abs(v.y);
 	pf->new[p].y+=v.y;
-	while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
-	while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+	pf->new[p].y=((pf->new[p].y+pf->maxx)%(pf->maxy*2+1))-pf->maxy;
 	//if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
 	//if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
 }
@@ -301,6 +299,7 @@ int main(int argc, char ** argv)
 {
 	int i;
 	int x,y;
+	long int frames=0;
 	particleField pf;
 	pf.current=NULL;
 	pf.new=NULL;
@@ -315,6 +314,8 @@ int main(int argc, char ** argv)
 		{
 			renderFieldSimple(&pf);
 			printSimpleRender(&pf);
+			printf("FrameCount:%d",frames);
+			frames++;
 			//printParticles(&pf);
 	//		sleep(1);
 			mutateField(&pf);
