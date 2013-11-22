@@ -86,6 +86,7 @@ typedef struct particle
 typedef struct triple
 {
 	signed int r,g,b;
+	unsigned int count;
 } triple;
 typedef struct vect
 {
@@ -172,6 +173,7 @@ void renderFieldSimple(particleField * pf)
 			t->r=0;
 			t->g=0;
 			t->b=0;
+			t->count=0;
 		}
 	}
 	for (i=0;i<pf->pcount;i++)
@@ -181,6 +183,7 @@ void renderFieldSimple(particleField * pf)
 		t->r+=p.r;
 		t->g+=p.g;
 		t->b+=p.b;
+		t->count++;
 	}
 }
 void printSimpleRender(particleField * pf)
@@ -188,7 +191,6 @@ void printSimpleRender(particleField * pf)
 	signed int x,y;
 	double r,g,b;
 	unsigned int tr,tg,tb;
-	double m;
 	triple * t;
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
 	x=-pf->maxx;
@@ -197,23 +199,24 @@ void printSimpleRender(particleField * pf)
 	while(y>=-pf->maxy)
 	{
 		t=tripleAtPos(pf,x,y);
-		r=t->r;
-		g=t->g;
-		b=t->b;
-		m=(r<g?(r<b?r:b):g);
-		r+=m;
-		g+=m;
-		b+=m;
-		m=(r>g?(r>b?r:b):g);
-		r/=m;
-		g/=m;
-		b/=m;
-		tr=r*6;
-		tg=g*6;
-		tb=b*6;
-		tr=tr>5?5:tr;
-		tg=tg>5?5:tg;
-		tb=tb>5?5:tb;
+		if (t->count<1)
+		{
+			tr=2;
+			tg=2;
+			tb=2;
+		}
+		else
+		{
+			r=t->r/(double)t->count+0.5;
+			g=t->g/(double)t->count+0.5;
+			b=t->b/(double)t->count+0.5;
+			tr=r*6;
+			tg=g*6;
+			tb=b*6;
+			tr=tr>5?5:tr;
+			tg=tg>5?5:tg;
+			tb=tb>5?5:tb;
+		}
 		printf("\e[48;5;%dm \e[48;5;0m",16+36*tr+6*tg+tb);
 		//printf("[%+3d,%+3d,%+3d]",t->r,t->g,t->b);
 		x++;
