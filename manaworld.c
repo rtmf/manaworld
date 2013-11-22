@@ -282,7 +282,7 @@ void mutateParticle(particleField * pf, int p)
 	//if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
 	if (v.y!=0) v.y/=abs(v.y);
 	pf->new[p].y+=v.y;
-	pf->new[p].y=((pf->new[p].y+pf->maxx)%(pf->maxy*2+1))-pf->maxy;
+	pf->new[p].y=((pf->new[p].y+pf->maxy)%(pf->maxy*2+1))-pf->maxy;
 	//if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
 	//if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
 }
