@@ -261,7 +261,8 @@ void addParticleForce(particleField * pf, int p, vect * v)
 	{
 		pt=pf->current[i];
 		if (pd.attracts[pt.class]) mag=SCALE;
-		if (pd.repels[pt.class]) mag=-SCALE;
+		else if (pd.repels[pt.class]) mag=-SCALE;
+		else continue;
 		addForceFrom(pf,p,v,pt.x,pt.y,mag);
 	}
 }
