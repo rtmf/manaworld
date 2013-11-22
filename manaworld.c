@@ -177,7 +177,7 @@ void printSimpleRender(particleField * pf)
 	if (pf==NULL || pf->current==NULL || pf->field==NULL) return;
 	x=-pf->maxx;
 	y=pf->maxy;
-	printf("Simple Render:\n");
+	printf("\e[HSimple Render:\n");
 	while(y>=-pf->maxy)
 	{
 		t=tripleAtPos(pf,x,y);
@@ -191,7 +191,7 @@ void printSimpleRender(particleField * pf)
 		}
 	}
 }
-void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int y, signed int mag)
+void addForceFrom(particleField * pf, int p, vect * v, signed int x, signed int y, double mag)
 {
 	double xf,yf;
 	double dist;
@@ -211,7 +211,7 @@ void addPoleForce(particleField * pf, int p, vect * v)
 	addForceFrom(pf,p,v,0,-pf->maxy,pd.poles[2]*pf->maxy);
 	addForceFrom(pf,p,v,-pf->maxx,0,pd.poles[3]*pf->maxx);
 }
-#define SCALE 10
+#define SCALE 0.1
 void addParticleForce(particleField * pf, int p, vect * v)
 {
 	int i;
@@ -230,13 +230,17 @@ void mutateParticle(particleField * pf, int p)
 	v.y=0;
 	pf->new[p]=pf->current[p];
 	addPoleForce(pf,p,&v);
-	//addParticleForce(pf,p,&v);
+	addParticleForce(pf,p,&v);
 	pf->new[p].x+=v.x;
-	while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
-	while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+	//while (pf->new[p].x>pf->maxx) pf->new[p].x-=(pf->maxx*2+1);
+	//while (pf->new[p].x<-pf->maxx) pf->new[p].x+=(pf->maxx*2+1);
+	if (pf->new[p].x>pf->maxx) pf->new[p].x=pf->maxx;
+	if (pf->new[p].x<-pf->maxx) pf->new[p].x=-pf->maxx;
 	pf->new[p].y+=v.y;
-	while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
-	while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+	//while (pf->new[p].y>pf->maxy) pf->new[p].y-=(pf->maxy*2+1);
+	//while (pf->new[p].y<-pf->maxy) pf->new[p].y+=(pf->maxy*2+1);
+	if (pf->new[p].y>pf->maxy) pf->new[p].y=pf->maxy;
+	if (pf->new[p].y<-pf->maxy) pf->new[p].y=-pf->maxy;
 }
 void mutateField(particleField * pf)
 {
@@ -265,7 +269,7 @@ int main(int argc, char ** argv)
 		{
 			renderFieldSimple(&pf);
 			printSimpleRender(&pf);
-			sleep(1);
+//			sleep(1);
 			mutateField(&pf);
 		}
 		return 0;
